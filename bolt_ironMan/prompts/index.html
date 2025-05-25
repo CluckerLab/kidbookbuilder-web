@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kid Book Builder - Powered by Stark Tech</title>
+    <style>
+        :root {
+            --hot-rod-red: #E3000B;
+            --arc-reactor-blue: #64F3FF;
+            --mark-iii-gold: #FFB300;
+            --stark-silver: #C5C5C5;
+            --workshop-steel: #4A4A4A;
+            --night-mode-black: #121212;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--night-mode-black);
+            color: var(--stark-silver);
+            line-height: 1.6;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(rgba(18, 18, 18, 0.9), rgba(18, 18, 18, 0.7)),
+                        url('images/01-hero-background.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(transparent, var(--night-mode-black));
+        }
+
+        .hero-content {
+            max-width: 800px;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            color: var(--arc-reactor-blue);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(100, 243, 255, 0.5);
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            color: var(--stark-silver);
+            margin-bottom: 2rem;
+        }
+
+        .hero-button {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: var(--hot-rod-red);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .hero-button:hover {
+            background: transparent;
+            border-color: var(--hot-rod-red);
+            box-shadow: 0 0 15px rgba(227, 0, 11, 0.5);
+        }
+
+        /* CTA Section Styles (existing) */
+        .cta-section {
+            padding: 6rem 2rem;
+            background-color: var(--workshop-steel);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(100, 243, 255, 0.1), transparent);
+            pointer-events: none;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(18, 18, 18, 0.9);
+            border-radius: 8px;
+            border: 1px solid var(--arc-reactor-blue);
+            box-shadow: 0 0 20px rgba(100, 243, 255, 0.2);
+        }
+
+        .form-title {
+            color: var(--arc-reactor-blue);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .contact-form {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            color: var(--mark-iii-gold);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--stark-silver);
+            background: rgba(74, 74, 74, 0.3);
+            color: var(--stark-silver);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--arc-reactor-blue);
+            box-shadow: 0 0 5px rgba(100, 243, 255, 0.3);
+        }
+
+        button[type="submit"] {
+            background: var(--hot-rod-red);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button[type="submit"]:hover {
+            background: var(--arc-reactor-blue);
+            box-shadow: 0 0 15px rgba(100, 243, 255, 0.5);
+        }
+
+        /* Additional Enhancements */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Kid Book Builder</h1>
+            <p>Power up your creativity with Stark-level technology. Create stories that inspire the next generation of heroes.</p>
+            <a href="#contact-form" class="hero-button">Start Your Journey</a>
+        </div>
+    </section>
+
+    <!-- CTA Form Section -->
+    <section class="cta-section" id="contact-form">
+        <div class="form-container">
+            <h2 class="form-title">Power Up Your Story</h2>
+            <form name="contact" method="POST" data-netlify="true" class="contact-form">
+                <input type="hidden" name="form-name" value="contact" />
+                
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" name="name" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Your Story Idea</label>
+                    <textarea id="message" name="message" rows="4" required></textarea>
+                </div>
+
+                <button type="submit">Initialize Launch Sequence</button>
+            </form>
+        </div>
+    </section>
+</body>
+</html> 
