@@ -141,11 +141,13 @@ export default function FinalCTA() {
                     type="submit"
                     size="lg"
                     variant="gold"
-                    className="w-full text-night-sky font-bold"
+                    className="w-full text-night-sky font-bold flex items-center justify-center"
                     sparkles
                   >
-                    Begin Your Author Journey
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    <span className="flex items-center">
+                      Begin Your Child's Author Journey
+                      <ArrowRight className="ml-2 h-5 w-5 inline-block" />
+                    </span>
                   </ButtonMagic>
                 </div>
               </form>
@@ -184,8 +186,11 @@ export default function FinalCTA() {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="https://app.kidbookbuilder.com/" target="_blank">
-                  <ButtonMagic variant="default" className="w-full sm:w-auto">
-                    Access the App <ExternalLink className="ml-2 h-4 w-4" />
+                  <ButtonMagic variant="default" className="w-full sm:w-auto flex items-center justify-center">
+                    <span className="flex items-center">
+                      Access the App
+                      <ExternalLink className="ml-2 h-4 w-4 inline-block" />
+                    </span>
                   </ButtonMagic>
                 </Link>
               </div>
@@ -227,15 +232,17 @@ export default function FinalCTA() {
           </div>
 
           <div className="mt-12">
-            <Link href="/app" passHref>
+            <Link href="https://app.kidbookbuilder.com" target="_blank">
               <ButtonMagic
                 size="lg"
                 variant="gold"
-                className="w-full text-night-sky font-bold"
+                className="w-full text-night-sky font-bold flex items-center justify-center"
                 sparkles
               >
-                Go to the App
-                <ExternalLink className="ml-2 h-5 w-5" />
+                <span className="flex items-center">
+                  Start Building Your Book
+                  <ExternalLink className="ml-2 h-5 w-5 inline-block" />
+                </span>
               </ButtonMagic>
             </Link>
           </div>
