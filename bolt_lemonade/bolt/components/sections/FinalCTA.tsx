@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ButtonMagic } from "@/components/ui/button-magic";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, Star, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
@@ -178,14 +179,16 @@ export default function FinalCTA() {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-dream-gold/30"></div>
               </div>
               
-              <h3 className="text-2xl font-bold mb-2 text-dream-gold">
-                Thank You for Joining!
-              </h3>
-              <p className="text-white/90 mb-6">
-                Get ready to embark on an amazing storytelling journey. We'll be in touch soon with your next steps.
-              </p>
+              <div className="text-xl font-bold mb-2 text-white">Thank You for Joining!</div>
+              <p className="text-white/90 mb-6">We'll be in touch with all the details to get your child's publishing journey started.</p>
               
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-dream-gold/30 to-transparent"></div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="https://app.kidbookbuilder.com/" target="_blank">
+                  <ButtonMagic variant="default" className="w-full sm:w-auto">
+                    Access the App <ExternalLink className="ml-2 h-4 w-4" />
+                  </ButtonMagic>
+                </Link>
+              </div>
             </motion.div>
           )}
           
@@ -221,6 +224,20 @@ export default function FinalCTA() {
               name="Parent"
               quote="The business skills are as valuable as the creative ones."
             />
+          </div>
+
+          <div className="mt-12">
+            <Link href="/app" passHref>
+              <ButtonMagic
+                size="lg"
+                variant="gold"
+                className="w-full text-night-sky font-bold"
+                sparkles
+              >
+                Go to the App
+                <ExternalLink className="ml-2 h-5 w-5" />
+              </ButtonMagic>
+            </Link>
           </div>
         </motion.div>
       </div>

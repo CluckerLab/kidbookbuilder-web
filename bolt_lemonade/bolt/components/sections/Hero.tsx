@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ButtonMagic } from "@/components/ui/button-magic";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Hero() {
@@ -34,7 +35,23 @@ export default function Hero() {
   };
 
   return (
-    <section className="min-h-screen relative flex items-center overflow-hidden bg-gradient-to-b from-enchanted-purple/5 to-white py-16 md:py-24">
+    <section className="min-h-screen relative flex flex-col items-center overflow-hidden bg-gradient-to-b from-enchanted-purple/5 to-white py-16 md:py-24">
+      {/* Navigation Bar */}
+      <div className="container mx-auto px-4 md:px-6 fixed top-0 left-0 right-0 z-50 py-4">
+        <div className="flex items-center justify-between bg-white/80 backdrop-blur-md rounded-full px-6 py-3 shadow-md">
+          <div className="text-xl font-bold text-enchanted-purple">KidBookBuilder</div>
+          <div className="flex items-center space-x-6">
+            <Link 
+              href="https://app.kidbookbuilder.com/" 
+              target="_blank" 
+              className="flex items-center gap-1 text-storybook-blue hover:text-enchanted-purple transition-colors font-medium"
+            >
+              Go to App <ExternalLink className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Floating elements animation */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(5)].map((_, i) => (
@@ -90,9 +107,11 @@ export default function Hero() {
                 Start Your Journey Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </ButtonMagic>
-              <ButtonMagic size="lg" variant="purple">
-                See How It Works
-              </ButtonMagic>
+              <Link href="https://app.kidbookbuilder.com/" target="_blank">
+                <ButtonMagic size="lg" variant="purple">
+                  Go to App <ExternalLink className="ml-2 h-5 w-5" />
+                </ButtonMagic>
+              </Link>
             </div>
           </motion.div>
 
