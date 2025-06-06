@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ButtonMagic } from "@/components/ui/button-magic";
 import { motion } from "framer-motion";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowDown, ArrowRight, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Hero() {
@@ -46,7 +46,10 @@ export default function Hero() {
               target="_blank" 
               className="flex items-center gap-1 text-storybook-blue hover:text-enchanted-purple transition-colors font-medium"
             >
-              Go to App <ExternalLink className="h-4 w-4" />
+              <span className="flex items-center">
+                Start Building Your Book
+                <ExternalLink className="ml-1 h-4 w-4 inline-block" />
+              </span>
             </Link>
           </div>
         </div>
@@ -103,13 +106,18 @@ export default function Hero() {
               The platform where young writers become young entrepreneurs
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <ButtonMagic size="lg" sparkles onClick={scrollToForm}>
-                Start Your Journey Now
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <ButtonMagic size="lg" sparkles onClick={scrollToForm} className="flex items-center justify-center">
+                <span className="flex items-center">
+                  Sign Up Your Kid
+                  <ArrowDown className="ml-2 h-5 w-5 inline-block" />
+                </span>
               </ButtonMagic>
-              <Link href="https://app.kidbookbuilder.com/" target="_blank">
-                <ButtonMagic size="lg" variant="purple">
-                  Go to App <ExternalLink className="ml-2 h-5 w-5" />
+              <Link href="https://app.kidbookbuilder.com" target="_blank">
+                <ButtonMagic size="lg" variant="purple" className="flex items-center justify-center">
+                  <span className="flex items-center">
+                    Start Building Your Book
+                    <ExternalLink className="ml-2 h-5 w-5 inline-block" />
+                  </span>
                 </ButtonMagic>
               </Link>
             </div>
