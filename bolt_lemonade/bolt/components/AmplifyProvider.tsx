@@ -1,12 +1,12 @@
 "use client";
 
 import { Amplify } from 'aws-amplify';
-import outputs from '@/amplify_outputs.json';
+import config from '@/amplify_outputs.json';
 import { useEffect } from 'react';
 
 export function AmplifyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    Amplify.configure(outputs, {
+    Amplify.configure(config, {
       ssr: true
     });
   }, []);
