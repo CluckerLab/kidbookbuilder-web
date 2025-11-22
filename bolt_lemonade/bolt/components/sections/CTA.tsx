@@ -7,49 +7,118 @@ interface CTAProps {
   subtitle?: string;
 }
 
+// Amplify validation utilities
+const validateField = (value: string, validations: any[]) => {
+  for (const validation of validations) {
+    if (value === undefined || value === '' || value === null) {
+      if (validation.type === 'Required') {
+        return {
+          hasError: true,
+          errorMessage: validation.validationMessage || 'The value is required',
+        };
+      } else {
+        return {
+          hasError: false,
+        };
+      }
+    }
+  }
+  return { hasError: false };
+};
+
 const CTA: React.FC<CTAProps> = ({
   title = "Ready to Start Creating?",
   subtitle = "Join our community of storytellers and bring your children&apos;s books to life"
 }) => {
-  const [formData, setFormData] = useState({
-    name: '',
+  const initialValues = {
+    parentName: '',
     parentEmail: '',
     childName: '',
     childAge: ''
-  });
+  };
+
+  const [parentName, setParentName] = useState(initialValues.parentName);
+  const [parentEmail, setParentEmail] = useState(initialValues.parentEmail);
+  const [childName, setChildName] = useState(initialValues.childName);
+  const [childAge, setChildAge] = useState(initialValues.childAge);
+  const [errors, setErrors] = useState<Record<string, any>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const validations = {
+    parentName: [],
+    parentEmail: [],
+    childName: [],
+    childAge: []
+  };
+
+  const resetStateValues = () => {
+    setParentName(initialValues.parentName);
+    setParentEmail(initialValues.parentEmail);
+    setChildName(initialValues.childName);
+    setChildAge(initialValues.childAge);
+    setErrors({});
+  };
+
+  const runValidationTasks = async (fieldName: string, currentValue: string) => {
+    const value = currentValue;
+    let validationResponse = validateField(value, validations[fieldName as keyof typeof validations]);
+    setErrors(errors => ({ ...errors, [fieldName]: validationResponse }));
+    return validationResponse;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const modelFields = {
+      parentName,
+      parentEmail,
+      childName,
+      childAge
+    };
+
+    // Run validations on all fields
+    const validationResponses = await Promise.all(
+      Object.keys(validations).reduce((promises: Promise<any>[], fieldName) => {
+        if (Array.isArray(modelFields[fieldName as keyof typeof modelFields])) {
+          promises.push(
+            ...(modelFields[fieldName as keyof typeof modelFields] as any[]).map(item =>
+              runValidationTasks(fieldName, item)
+            )
+          );
+          return promises;
+        }
+        promises.push(
+          runValidationTasks(fieldName, modelFields[fieldName as keyof typeof modelFields])
+        );
+        return promises;
+      }, [])
+    );
+
+    if (validationResponses.some(r => r.hasError)) {
+      return;
+    }
+
+    // Submit the form (you can replace this with your actual submission logic)
     try {
-      const form = e.target as HTMLFormElement;
-      const data = new FormData(form);
-      
       const response = await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(data as any).toString()
+        body: new URLSearchParams({
+          'form-name': 'kid-book-builder-signup',
+          ...modelFields
+        }).toString()
       });
-      
+
       if (response.ok) {
-        console.log("Form successfully submitted to Netlify");
+        console.log("Form successfully submitted");
         setIsSubmitted(true);
-        setFormData({ name: '', parentEmail: '', childName: '', childAge: '' });
+        resetStateValues();
       } else {
         console.error("Form submission failed");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
   };
 
   return (
@@ -127,24 +196,44 @@ const CTA: React.FC<CTAProps> = ({
                 <div>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
+                    name="parentName"
+                    value={parentName}
+                    onChange={(e) => {
+                      let { value } = e.target;
+                      if (errors.parentName?.hasError) {
+                        runValidationTasks("parentName", value);
+                      }
+                      setParentName(value);
+                    }}
+                    onBlur={() => runValidationTasks("parentName", parentName)}
                     placeholder="Parent&apos;s Name"
                     required
                     className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
                   />
+                  {errors.parentName?.hasError && (
+                    <p className="mt-1 text-sm text-red-400">{errors.parentName.errorMessage}</p>
+                  )}
                 </div>
                 <div>
                   <input
                     type="email"
                     name="parentEmail"
-                    value={formData.parentEmail}
-                    onChange={handleChange}
+                    value={parentEmail}
+                    onChange={(e) => {
+                      let { value } = e.target;
+                      if (errors.parentEmail?.hasError) {
+                        runValidationTasks("parentEmail", value);
+                      }
+                      setParentEmail(value);
+                    }}
+                    onBlur={() => runValidationTasks("parentEmail", parentEmail)}
                     placeholder="Parent&apos;s Email"
                     required
                     className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
                   />
+                  {errors.parentEmail?.hasError && (
+                    <p className="mt-1 text-sm text-red-400">{errors.parentEmail.errorMessage}</p>
+                  )}
                 </div>
                 <div className="pt-6 mt-2">
                   <div className="w-full h-px bg-gradient-to-r from-transparent via-[#64F3FF]/30 to-transparent"></div>
@@ -153,25 +242,45 @@ const CTA: React.FC<CTAProps> = ({
                   <input
                     type="text"
                     name="childName"
-                    value={formData.childName}
-                    onChange={handleChange}
+                    value={childName}
+                    onChange={(e) => {
+                      let { value } = e.target;
+                      if (errors.childName?.hasError) {
+                        runValidationTasks("childName", value);
+                      }
+                      setChildName(value);
+                    }}
+                    onBlur={() => runValidationTasks("childName", childName)}
                     placeholder="Child&apos;s Name"
                     required
                     className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
                   />
+                  {errors.childName?.hasError && (
+                    <p className="mt-1 text-sm text-red-400">{errors.childName.errorMessage}</p>
+                  )}
                 </div>
                 <div>
                   <input
                     type="number"
                     name="childAge"
-                    value={formData.childAge}
-                    onChange={handleChange}
+                    value={childAge}
+                    onChange={(e) => {
+                      let { value } = e.target;
+                      if (errors.childAge?.hasError) {
+                        runValidationTasks("childAge", value);
+                      }
+                      setChildAge(value);
+                    }}
+                    onBlur={() => runValidationTasks("childAge", childAge)}
                     placeholder="Child&apos;s Age"
                     required
                     min="0"
                     max="18"
                     className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
                   />
+                  {errors.childAge?.hasError && (
+                    <p className="mt-1 text-sm text-red-400">{errors.childAge.errorMessage}</p>
+                  )}
                 </div>
                 <button
                   type="submit"
