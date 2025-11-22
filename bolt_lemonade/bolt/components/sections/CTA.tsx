@@ -1,6 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '@/amplify/data/resource';
+
+const client = generateClient<Schema>();
 
 interface CTAProps {
   title?: string;
@@ -98,24 +102,23 @@ const CTA: React.FC<CTAProps> = ({
       return;
     }
 
-    // Submit the form (you can replace this with your actual submission logic)
+    // Submit the form to AWS Amplify DataStore
     try {
-      const response = await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          'form-name': 'kid-book-builder-signup',
-          ...modelFields
-        }).toString()
+      const { data: signup, errors } = await client.models.Signup.create({
+        parentName: modelFields.parentName,
+        parentEmail: modelFields.parentEmail,
+        childName: modelFields.childName,
+        childAge: parseInt(modelFields.childAge)
       });
 
-      if (response.ok) {
-        console.log("Form successfully submitted");
-        setIsSubmitted(true);
-        resetStateValues();
-      } else {
-        console.error("Form submission failed");
+      if (errors) {
+        console.error("Form submission failed:", errors);
+        return;
       }
+
+      console.log("Form successfully submitted to Amplify:", signup);
+      setIsSubmitted(true);
+      resetStateValues();
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -185,13 +188,9 @@ const CTA: React.FC<CTAProps> = ({
             </div>
           ) : (
             <form
-              name="kid-book-builder-signup"
-              method="POST"
-              data-netlify="true"
               onSubmit={handleSubmit}
               className="max-w-md mx-auto"
             >
-              <input type="hidden" name="form-name" value="kid-book-builder-signup" />
               <div className="space-y-4">
                 <div>
                   <input

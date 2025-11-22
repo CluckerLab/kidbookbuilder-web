@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Montserrat } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AmplifyProvider } from "@/components/AmplifyProvider";
 
 const montserrat = Montserrat({ 
   subsets: ['latin'],
@@ -29,14 +30,16 @@ export default function RootLayout({
         montserrat.variable,
         "font-sans antialiased min-h-screen bg-magic-white text-night-sky"
       )}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <AmplifyProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </AmplifyProvider>
       </body>
     </html>
   );
