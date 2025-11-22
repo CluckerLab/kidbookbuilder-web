@@ -37,6 +37,4 @@ next-env.d.ts
 
 # amplify
 .amplify
-# Keep amplify_outputs.json for builds, but ignore dev versions
-amplify_outputs_*.json
-amplifyconfiguration*
+

@@ -82,20 +82,9 @@ const CTA: React.FC<CTAProps> = ({
 
     // Run validations on all fields
     const validationResponses = await Promise.all(
-      Object.keys(validations).reduce((promises: Promise<any>[], fieldName) => {
-        if (Array.isArray(modelFields[fieldName as keyof typeof modelFields])) {
-          promises.push(
-            ...(modelFields[fieldName as keyof typeof modelFields] as any[]).map(item =>
-              runValidationTasks(fieldName, item)
-            )
-          );
-          return promises;
-        }
-        promises.push(
-          runValidationTasks(fieldName, modelFields[fieldName as keyof typeof modelFields])
-        );
-        return promises;
-      }, [])
+      Object.keys(validations).map((fieldName) =>
+        runValidationTasks(fieldName, modelFields[fieldName as keyof typeof modelFields])
+      )
     );
 
     if (validationResponses.some(r => r.hasError)) {
