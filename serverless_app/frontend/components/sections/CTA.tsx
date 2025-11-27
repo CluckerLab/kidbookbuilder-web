@@ -1,228 +1,193 @@
 "use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 
-interface FormData {
-  parentName: string;
-  parentEmail: string;
-  childName: string;
-  childAge: string;
+interface CTAProps {
+  title?: string;
+  subtitle?: string;
 }
 
-interface FormErrors {
-  parentName?: string;
-  parentEmail?: string;
-  childName?: string;
-  childAge?: string;
-  submit?: string;
-}
-
-export default function CTA() {
-  const [formData, setFormData] = useState<FormData>({
+const CTA: React.FC<CTAProps> = ({
+  title = "Ready to Start Creating?",
+  subtitle = "Join our community of storytellers and bring your children's books to life"
+}) => {
+  const initialValues = {
     parentName: '',
     parentEmail: '',
     childName: '',
-    childAge: '',
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.parentName.trim()) {
-      newErrors.parentName = 'Parent name is required';
-    }
-
-    if (!formData.parentEmail.trim()) {
-      newErrors.parentEmail = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.parentEmail)) {
-      newErrors.parentEmail = 'Please enter a valid email address';
-    }
-
-    if (!formData.childName.trim()) {
-      newErrors.childName = 'Child name is required';
-    }
-
-    if (!formData.childAge) {
-      newErrors.childAge = 'Child age is required';
-    } else {
-      const age = parseInt(formData.childAge, 10);
-      if (isNaN(age) || age < 0 || age > 18) {
-        newErrors.childAge = 'Age must be between 0 and 18';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    childAge: ''
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
+  const [parentName, setParentName] = useState(initialValues.parentName);
+  const [parentEmail, setParentEmail] = useState(initialValues.parentEmail);
+  const [childName, setChildName] = useState(initialValues.childName);
+  const [childAge, setChildAge] = useState(initialValues.childAge);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const resetStateValues = () => {
+    setParentName(initialValues.parentName);
+    setParentEmail(initialValues.parentEmail);
+    setChildName(initialValues.childName);
+    setChildAge(initialValues.childAge);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrors({});
+    setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
-      const response = await fetch(`${apiUrl}/signups`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(`${API_URL}/signups`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          parentName: formData.parentName.trim(),
-          parentEmail: formData.parentEmail.trim().toLowerCase(),
-          childName: formData.childName.trim(),
-          childAge: parseInt(formData.childAge, 10),
-        }),
+          parentName,
+          parentEmail,
+          childName,
+          childAge: parseInt(childAge, 10)
+        })
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Something went wrong');
+      if (response.ok) {
+        console.log("Form successfully submitted");
+        setIsSubmitted(true);
+        resetStateValues();
+      } else {
+        console.error("Form submission failed");
       }
-
-      console.log('Signup successful:', data);
-      setIsSubmitted(true);
-      setFormData({ parentName: '', parentEmail: '', childName: '', childAge: '' });
     } catch (error) {
-      console.error('Signup error:', error);
-      setErrors({
-        submit: error instanceof Error ? error.message : 'Failed to submit. Please try again.',
-      });
+      console.error("Error submitting form:", error);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <section id="signup-form" className="py-20 bg-gradient-to-b from-enchanted-purple/5 to-white">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="max-w-xl mx-auto">
-          {/* Section header */}
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-enchanted-purple mb-4">
-              Ready to Start Creating?
-            </h2>
-            <p className="text-lg text-night-sky/70">
-              Join our community of young storytellers and entrepreneurs
-            </p>
-          </div>
+    <section id="join-form" className="relative bg-[#121212] py-16">
+      {/* Tech circuit lines */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute left-0 top-1/4 h-px w-full bg-gradient-to-r from-transparent via-[#64F3FF]/30 to-transparent"></div>
+        <div className="absolute right-0 top-3/4 h-px w-full bg-gradient-to-r from-transparent via-[#E3000B]/30 to-transparent"></div>
+      </div>
+
+      {/* Arc reactor glow */}
+      <div className="absolute left-1/2 top-1/2 -z-10 h-96 w-96 -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-gradient-to-r from-[#64F3FF]/10 to-[#0B6FFF]/10 blur-3xl"></div>
+
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-[#64F3FF] to-[#0B6FFF] bg-clip-text text-transparent">
+            {title}
+          </h2>
+          <p className="text-xl text-[#C5C5C5] mb-8">
+            {subtitle}
+          </p>
 
           {isSubmitted ? (
-            // Success state
-            <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-imagination-green/20 flex items-center justify-center">
-                <CheckCircle className="h-10 w-10 text-imagination-green" />
-              </div>
-              <h3 className="text-2xl font-bold text-enchanted-purple mb-2">
-                Thank You for Joining!
-              </h3>
-              <p className="text-night-sky/70 mb-6">
-                Get ready to embark on an amazing storytelling journey. We&apos;ll be in touch soon with your next steps.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => setIsSubmitted(false)}
-              >
-                Sign Up Another Child
-              </Button>
-            </div>
-          ) : (
-            // Form
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8">
-              <div className="space-y-5">
-                <Input
-                  label="Parent's Name"
-                  name="parentName"
-                  type="text"
-                  placeholder="Enter your name"
-                  value={formData.parentName}
-                  onChange={handleChange}
-                  error={errors.parentName}
-                  required
-                />
-
-                <Input
-                  label="Parent's Email"
-                  name="parentEmail"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.parentEmail}
-                  onChange={handleChange}
-                  error={errors.parentEmail}
-                  required
-                />
-
-                <div className="pt-4 border-t border-night-sky/10">
-                  <p className="text-sm text-night-sky/60 mb-4">Child Information</p>
+            <div className="relative max-w-md mx-auto">
+              <div className="bg-[#2A2A2A]/80 border border-[#64F3FF]/20 rounded-lg p-8 backdrop-blur-sm">
+                {/* Success icon/animation */}
+                <div className="mb-6 relative">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-r from-[#64F3FF]/20 to-[#0B6FFF]/20 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#64F3FF] to-[#0B6FFF] flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  {/* Decorative rings */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border border-[#64F3FF]/20 animate-pulse"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-[#64F3FF]/30"></div>
                 </div>
 
-                <Input
-                  label="Child's Name"
-                  name="childName"
-                  type="text"
-                  placeholder="Enter child's name"
-                  value={formData.childName}
-                  onChange={handleChange}
-                  error={errors.childName}
-                  required
-                />
+                {/* Success message */}
+                <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-[#64F3FF] to-[#0B6FFF] bg-clip-text text-transparent text-center">
+                  Thank You for Joining!
+                </h3>
+                <p className="text-[#C5C5C5] text-center mb-6">
+                  Get ready to embark on an amazing storytelling journey. We&apos;ll be in touch soon with your next steps.
+                </p>
 
-                <Input
-                  label="Child's Age"
-                  name="childAge"
-                  type="number"
-                  placeholder="Enter child's age"
-                  min="0"
-                  max="18"
-                  value={formData.childAge}
-                  onChange={handleChange}
-                  error={errors.childAge}
-                  required
-                />
+                {/* Tech circuit line */}
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-[#64F3FF]/30 to-transparent"></div>
+              </div>
 
-                {errors.submit && (
-                  <div className="p-3 rounded-lg bg-creative-coral/10 text-creative-coral text-sm">
-                    {errors.submit}
-                  </div>
-                )}
-
-                <Button
+              {/* Background glow effect */}
+              <div className="absolute -inset-4 -z-10 bg-gradient-to-r from-[#64F3FF]/5 to-[#0B6FFF]/5 rounded-lg blur-xl"></div>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="max-w-md mx-auto"
+            >
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    name="parentName"
+                    value={parentName}
+                    onChange={(e) => setParentName(e.target.value)}
+                    placeholder="Parent's Name"
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="email"
+                    name="parentEmail"
+                    value={parentEmail}
+                    onChange={(e) => setParentEmail(e.target.value)}
+                    placeholder="Parent's Email"
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
+                  />
+                </div>
+                <div className="pt-6 mt-2">
+                  <div className="w-full h-px bg-gradient-to-r from-transparent via-[#64F3FF]/30 to-transparent"></div>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    name="childName"
+                    value={childName}
+                    onChange={(e) => setChildName(e.target.value)}
+                    placeholder="Child's Name"
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    name="childAge"
+                    value={childAge}
+                    onChange={(e) => setChildAge(e.target.value)}
+                    placeholder="Child's Age"
+                    required
+                    min="0"
+                    max="18"
+                    className="w-full px-4 py-3 rounded-lg border border-[#C5C5C5]/20 bg-[#2A2A2A]/80 text-white placeholder-[#C5C5C5]/70 focus:outline-none focus:ring-2 focus:ring-[#64F3FF]/50 focus:border-[#64F3FF]/50"
+                  />
+                </div>
+                <button
                   type="submit"
-                  size="lg"
-                  className="w-full"
-                  disabled={isSubmitting}
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-[#64F3FF] to-[#0B6FFF] text-white font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition duration-200 disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Signing Up...
-                    </>
-                  ) : (
-                    'Join Now'
-                  )}
-                </Button>
+                  {isLoading ? 'Submitting...' : 'Join Now'}
+                </button>
               </div>
             </form>
           )}
@@ -230,4 +195,6 @@ export default function CTA() {
       </div>
     </section>
   );
-}
+};
+
+export default CTA;

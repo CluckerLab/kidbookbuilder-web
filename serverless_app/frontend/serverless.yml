@@ -13,8 +13,20 @@ plugins:
   - serverless-s3-sync
 
 custom:
+  stage: ${self:provider.stage}
   siteName: kidbookbuilder-${self:provider.stage}
   s3Bucket: ${self:custom.siteName}-website
+  certificateArn: arn:aws:acm:us-east-1:084375555044:certificate/137f6ca4-1ce2-4260-a581-f5be789705dc
+  hostedZoneId: Z016948933M52QCUFNOMW
+  domainName:
+    dev: dev.kidbookbuilder.com
+    prod: www.kidbookbuilder.com
+  aliases:
+    dev:
+      - dev.kidbookbuilder.com
+    prod:
+      - www.kidbookbuilder.com
+      - kidbookbuilder.com
   s3Sync:
     - bucketName: ${self:custom.s3Bucket}
       localDir: out
@@ -72,6 +84,11 @@ resources:
           DefaultRootObject: index.html
           HttpVersion: http2
           PriceClass: PriceClass_100
+          Aliases: ${self:custom.aliases.${self:custom.stage}}
+          ViewerCertificate:
+            AcmCertificateArn: ${self:custom.certificateArn}
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
           Origins:
             - Id: S3Origin
               DomainName: !GetAtt WebsiteBucket.RegionalDomainName
@@ -102,6 +119,32 @@ resources:
               ResponsePagePath: /index.html
               ErrorCachingMinTTL: 300
 
+    # Route 53 DNS Record for Frontend
+    FrontendDNSRecord:
+      Type: AWS::Route53::RecordSet
+      Properties:
+        HostedZoneId: ${self:custom.hostedZoneId}
+        Name: ${self:custom.domainName.${self:custom.stage}}
+        Type: A
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID (constant)
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+
+    # Route 53 DNS Record for Apex (prod only)
+    ApexDNSRecord:
+      Type: AWS::Route53::RecordSet
+      Condition: IsProd
+      Properties:
+        HostedZoneId: ${self:custom.hostedZoneId}
+        Name: kidbookbuilder.com
+        Type: A
+        AliasTarget:
+          HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID (constant)
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+
+  Conditions:
+    IsProd: !Equals ['${self:provider.stage}', 'prod']
+
   Outputs:
     WebsiteBucketName:
       Description: S3 bucket name
@@ -120,3 +163,9 @@ resources:
       Value: !Sub https://${CloudFrontDistribution.DomainName}
       Export:
         Name: ${self:service}-${self:provider.stage}-WebsiteUrl
+
+    CustomDomainUrl:
+      Description: Custom domain URL
+      Value: !Sub https://${self:custom.domainName.${self:custom.stage}}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CustomDomainUrl

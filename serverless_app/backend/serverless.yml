@@ -4,6 +4,17 @@
 service: kidbookbuilder-api
 frameworkVersion: '3'
 
+custom:
+  stage: ${self:provider.stage}
+  certificateArn: arn:aws:acm:us-east-1:084375555044:certificate/137f6ca4-1ce2-4260-a581-f5be789705dc
+  hostedZoneId: Z016948933M52QCUFNOMW
+  apiDomainName:
+    dev: api-dev.kidbookbuilder.com
+    prod: api.kidbookbuilder.com
+  frontendDomain:
+    dev: dev.kidbookbuilder.com
+    prod: www.kidbookbuilder.com
+
 provider:
   name: aws
   runtime: nodejs20.x
@@ -14,6 +25,8 @@ provider:
   environment:
     TABLE_NAME: !Ref SignupsTable
     NOTIFICATION_EMAIL: travis@russigroup.com
+    STAGE: ${self:provider.stage}
+    FRONTEND_URL: https://${self:custom.frontendDomain.${self:custom.stage}}
 
   httpApi:
     cors:
@@ -21,6 +34,9 @@ provider:
         - http://localhost:3000
         - http://localhost:5173
         - https://d1igb37gzeru9j.cloudfront.net
+        - https://dev.kidbookbuilder.com
+        - https://www.kidbookbuilder.com
+        - https://kidbookbuilder.com
       allowedHeaders:
         - Content-Type
         - Authorization
@@ -193,9 +209,15 @@ resources:
         CallbackURLs:
           - http://localhost:3000
           - http://localhost:5173
+          - https://dev.kidbookbuilder.com
+          - https://www.kidbookbuilder.com
+          - https://kidbookbuilder.com
         LogoutURLs:
           - http://localhost:3000
           - http://localhost:5173
+          - https://dev.kidbookbuilder.com
+          - https://www.kidbookbuilder.com
+          - https://kidbookbuilder.com
         AllowedOAuthFlows:
           - code
         AllowedOAuthScopes:
@@ -210,8 +232,37 @@ resources:
     CognitoUserPoolDomain:
       Type: AWS::Cognito::UserPoolDomain
       Properties:
-        Domain: kidbookbuilder-api-dev-1764252546866
+        Domain: kidbookbuilder-api-${self:provider.stage}-1764252546866
         UserPoolId: !Ref CognitoUserPool
+
+    # API Gateway Custom Domain
+    ApiDomainName:
+      Type: AWS::ApiGatewayV2::DomainName
+      Properties:
+        DomainName: ${self:custom.apiDomainName.${self:custom.stage}}
+        DomainNameConfigurations:
+          - CertificateArn: ${self:custom.certificateArn}
+            EndpointType: REGIONAL
+
+    ApiMapping:
+      Type: AWS::ApiGatewayV2::ApiMapping
+      DependsOn: ApiDomainName
+      Properties:
+        ApiId: !Ref HttpApi
+        DomainName: ${self:custom.apiDomainName.${self:custom.stage}}
+        Stage: $default
+
+    # Route 53 DNS Record for API
+    ApiDNSRecord:
+      Type: AWS::Route53::RecordSet
+      DependsOn: ApiDomainName
+      Properties:
+        HostedZoneId: ${self:custom.hostedZoneId}
+        Name: ${self:custom.apiDomainName.${self:custom.stage}}
+        Type: A
+        AliasTarget:
+          HostedZoneId: !GetAtt ApiDomainName.RegionalHostedZoneId
+          DNSName: !GetAtt ApiDomainName.RegionalDomainName
 
   Outputs:
     ApiEndpoint:
@@ -219,6 +270,12 @@ resources:
       Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
       Export:
         Name: ${self:service}-${self:provider.stage}-ApiEndpoint
+
+    ApiCustomDomain:
+      Description: API Custom Domain URL
+      Value: !Sub https://${self:custom.apiDomainName.${self:custom.stage}}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ApiCustomDomain
 
     TableName:
       Description: DynamoDB table name

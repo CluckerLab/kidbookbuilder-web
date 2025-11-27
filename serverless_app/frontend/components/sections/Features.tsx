@@ -1,98 +1,163 @@
 "use client";
 
-import { Card, CardContent } from '@/components/ui/Card';
-import {
-  Wand2,
-  BarChart,
+import Image from "next/image";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Wand2, 
+  BarChart, 
   ShieldCheck,
   Lightbulb,
   BookHeart,
   Palette,
+  Users2,
+  BadgePercent,
+  Megaphone,
   TrendingUp,
   Trophy,
   Eye,
-} from 'lucide-react';
+  Check,
+  MessageSquareHeart,
+  LineChart,
+  LockKeyhole,
+  ActivitySquare,
+  ThumbsUp,
+  Wallet,
+  UsersRound
+} from "lucide-react";
+import { motion } from "framer-motion";
 
-const features = [
+const featureCategories = [
   {
-    icon: <Wand2 className="h-8 w-8" />,
-    title: 'Creative Tools',
-    description: 'AI-powered writing companion, easy-to-use design tools, and character development helpers.',
-    color: 'text-enchanted-purple',
-    bgColor: 'bg-enchanted-purple/10',
+    id: "creative",
+    name: "Creative Tools",
+    icon: <Wand2 className="h-5 w-5" />,
+    color: "text-enchanted-purple",
+    features: [
+      { icon: <Lightbulb />, title: "AI-powered writing companion" },
+      { icon: <Palette />, title: "Easy-to-use book design tools" },
+      { icon: <Users2 />, title: "Character development helpers" },
+      { icon: <BookHeart />, title: "Story structure guides" },
+      { icon: <Wand2 />, title: "Illustration assistance" },
+    ]
   },
   {
-    icon: <BarChart className="h-8 w-8" />,
-    title: 'Business Dashboard',
-    description: 'Kid-friendly business metrics, sales tracking, marketing toolkit, and achievement system.',
-    color: 'text-storybook-blue',
-    bgColor: 'bg-storybook-blue/10',
+    id: "business",
+    name: "Business Tools",
+    icon: <BarChart className="h-5 w-5" />,
+    color: "text-storybook-blue",
+    features: [
+      { icon: <TrendingUp />, title: "Kid-friendly business dashboard" },
+      { icon: <LineChart />, title: "Sales tracking and goals" },
+      { icon: <Megaphone />, title: "Marketing toolkit" },
+      { icon: <MessageSquareHeart />, title: "Reader engagement metrics" },
+      { icon: <Trophy />, title: "Achievement system" },
+    ]
   },
   {
-    icon: <ShieldCheck className="h-8 w-8" />,
-    title: 'Safety & Support',
-    description: 'Content oversight, progress monitoring, publishing approval, and family sharing features.',
-    color: 'text-creative-coral',
-    bgColor: 'bg-creative-coral/10',
-  },
-  {
-    icon: <Lightbulb className="h-8 w-8" />,
-    title: 'Story Guides',
-    description: 'Step-by-step story structure guides to help young writers craft compelling narratives.',
-    color: 'text-dream-gold',
-    bgColor: 'bg-dream-gold/10',
-  },
-  {
-    icon: <Palette className="h-8 w-8" />,
-    title: 'Illustration Help',
-    description: 'Easy illustration tools and AI assistance to bring stories to life visually.',
-    color: 'text-sparkle-pink',
-    bgColor: 'bg-sparkle-pink/10',
-  },
-  {
-    icon: <Trophy className="h-8 w-8" />,
-    title: 'Achievements',
-    description: 'Milestone tracking and rewards to celebrate every step of the creative journey.',
-    color: 'text-imagination-green',
-    bgColor: 'bg-imagination-green/10',
-  },
+    id: "safety",
+    name: "Safety & Support",
+    icon: <ShieldCheck className="h-5 w-5" />,
+    color: "text-creative-coral",
+    features: [
+      { icon: <Eye />, title: "Content oversight controls" },
+      { icon: <ActivitySquare />, title: "Progress monitoring" },
+      { icon: <ThumbsUp />, title: "Publishing approval system" },
+      { icon: <Wallet />, title: "Financial management tools" },
+      { icon: <UsersRound />, title: "Family sharing features" },
+    ]
+  }
 ];
 
 export default function Features() {
   return (
-    <section className="py-20 bg-soft-cloud">
+    <section className="py-20 bg-enchanted-purple/5">
       <div className="container mx-auto px-4 md:px-6">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-enchanted-purple mb-4">
-            Everything You Need to Succeed
-          </h2>
-          <p className="text-lg text-night-sky/70 max-w-2xl mx-auto">
-            Powerful tools designed specifically for young authors and entrepreneurs
-          </p>
-        </div>
-
-        {/* Features grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <Card
-              key={index}
-              variant="elevated"
-              className="group hover:scale-105 transition-transform duration-300"
-            >
-              <CardContent className="p-6">
-                <div className={`inline-flex p-3 rounded-xl ${feature.bgColor} ${feature.color} mb-4`}>
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-night-sky mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-night-sky/70">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+        <SectionHeading 
+          title="Everything You Need to Succeed" 
+          subtitle="Powerful tools designed specifically for young authors and entrepreneurs"
+        />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative h-[400px] sm:h-[500px] rounded-2xl overflow-hidden shadow-xl border-4 border-white"
+          >
+            <Image
+              src="/images/03-features.png"
+              alt="KidBookBuilder features"
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-enchanted-purple/80 to-transparent flex items-end p-6">
+              <h3 className="text-white text-2xl font-bold">
+                Magical Tools For Young Creators
+              </h3>
+            </div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Tabs defaultValue="creative" className="w-full">
+              <TabsList className="w-full grid grid-cols-3 mb-8">
+                {featureCategories.map((category) => (
+                  <TabsTrigger 
+                    key={category.id} 
+                    value={category.id}
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-lg flex gap-2 items-center"
+                  >
+                    <span className={category.color}>{category.icon}</span>
+                    <span className="hidden sm:inline">{category.name}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              {featureCategories.map((category) => (
+                <TabsContent 
+                  key={category.id} 
+                  value={category.id}
+                  className="bg-white rounded-xl shadow-lg p-6"
+                >
+                  <h3 className={`text-2xl font-bold mb-6 ${category.color}`}>
+                    {category.name}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {category.features.map((feature, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-soft-cloud transition-colors"
+                      >
+                        <div className={`p-2 rounded-full ${category.color} bg-soft-cloud`}>
+                          {feature.icon}
+                        </div>
+                        <span className="font-medium">{feature.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-6 p-4 bg-soft-cloud rounded-lg">
+                    <h4 className="font-bold mb-2 flex items-center gap-2">
+                      <Check className="text-imagination-green" />
+                      Why {category.name} Matter
+                    </h4>
+                    <p className="text-night-sky/80">
+                      Our {category.name.toLowerCase()} are designed specifically for young creators, 
+                      making the journey from imagination to published business intuitive, 
+                      fun, and educational.
+                    </p>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </motion.div>
         </div>
       </div>
     </section>

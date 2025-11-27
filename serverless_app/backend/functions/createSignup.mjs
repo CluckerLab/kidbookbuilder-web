@@ -14,6 +14,8 @@ const sesClient = new SESClient({});
 // Get environment variables
 const tableName = process.env.TABLE_NAME;
 const notificationEmail = process.env.NOTIFICATION_EMAIL;
+const stage = process.env.STAGE || 'dev';
+const frontendUrl = process.env.FRONTEND_URL || 'unknown';
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -93,7 +95,11 @@ export const handler = async (event) => {
     // Send email notification
     if (notificationEmail) {
       try {
-        const emailBody = `New KidBookBuilder Signup!
+        const envLabel = stage.toUpperCase();
+        const emailBody = `[${envLabel}] New KidBookBuilder Signup!
+
+Environment: ${envLabel}
+Website: ${frontendUrl}
 
 Parent Name: ${item.parentName}
 Parent Email: ${item.parentEmail}
@@ -109,7 +115,7 @@ Timestamp: ${item.createdAt}`;
             ToAddresses: [notificationEmail],
           },
           Message: {
-            Subject: { Data: `New KidBookBuilder Signup: ${item.parentName}` },
+            Subject: { Data: `[${envLabel}] New KidBookBuilder Signup: ${item.parentName}` },
             Body: {
               Text: { Data: emailBody },
             },

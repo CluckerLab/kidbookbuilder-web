@@ -1,47 +1,25 @@
+import * as React from 'react';
+
 import { cn } from '@/lib/utils';
-import { InputHTMLAttributes, forwardRef } from 'react';
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-}
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, id, ...props }, ref) => {
-    const inputId = id || props.name;
-
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
     return (
-      <div className="w-full">
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-night-sky mb-1"
-          >
-            {label}
-          </label>
+      <input
+        type={type}
+        className={cn(
+          'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          className
         )}
-        <input
-          id={inputId}
-          className={cn(
-            'w-full px-4 py-3 rounded-lg border bg-white text-night-sky placeholder-night-sky/50',
-            'focus:outline-none focus:ring-2 focus:ring-enchanted-purple/50 focus:border-enchanted-purple',
-            'transition-colors duration-200',
-            error
-              ? 'border-creative-coral focus:ring-creative-coral/50 focus:border-creative-coral'
-              : 'border-night-sky/20',
-            className
-          )}
-          ref={ref}
-          {...props}
-        />
-        {error && (
-          <p className="mt-1 text-sm text-creative-coral">{error}</p>
-        )}
-      </div>
+        ref={ref}
+        {...props}
+      />
     );
   }
 );
-
 Input.displayName = 'Input';
 
 export { Input };
