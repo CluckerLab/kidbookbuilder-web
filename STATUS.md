@@ -147,64 +147,33 @@ npm run deploy:prod
 
 ### 4. Email Notifications on CTA Submission
 **Priority:** Medium
-**Status:** Not started
+**Status:** Implemented (pending deploy)
 
 Send email notification when someone submits the signup form.
 
-**Options:**
+**Implementation:** AWS SES (Option A)
+- [x] Add SES permissions to Lambda IAM role
+- [x] Update `createSignup` Lambda to send email after DynamoDB write
+- [ ] Verify sender email in SES (one-time setup)
+- [ ] Deploy backend
 
-#### Option A: AWS SES (Simple Email Service)
-- [ ] Verify sender email in SES
-- [ ] Add SES permissions to Lambda IAM role
-- [ ] Update `createSignup` Lambda to send email after DynamoDB write
-- [ ] Add email template
+**To complete setup:**
+1. Verify email in SES:
+   ```bash
+   aws ses verify-email-identity --email-address travis@russigroup.com --region us-east-1
+   ```
+2. Click the verification link sent to your email
+3. Deploy:
+   ```bash
+   cd serverless_app/backend
+   npx serverless deploy
+   ```
 
-**Files to modify:**
-- `backend/serverless.yml` - Add SES IAM permissions
-- `backend/functions/createSignup.mjs` - Add SES send email logic
+**Files modified:**
+- `backend/serverless.yml` - Added SES IAM permission + NOTIFICATION_EMAIL env var
+- `backend/functions/createSignup.mjs` - Added SES email sending after DynamoDB write
 
-**Example IAM permission:**
-```yaml
-- Effect: Allow
-  Action:
-    - ses:SendEmail
-    - ses:SendRawEmail
-  Resource: "*"
-```
-
-**Example Lambda code:**
-```javascript
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-
-const sesClient = new SESClient({});
-
-// After successful DynamoDB write:
-await sesClient.send(new SendEmailCommand({
-  Source: "noreply@yourdomain.com",
-  Destination: {
-    ToAddresses: ["admin@yourdomain.com"],
-  },
-  Message: {
-    Subject: { Data: "New KidBookBuilder Signup!" },
-    Body: {
-      Text: { Data: `New signup: ${parentName} (${parentEmail}) - Child: ${childName}, Age: ${childAge}` },
-    },
-  },
-}));
-```
-
-#### Option B: AWS SNS (Simple Notification Service)
-- [ ] Create SNS topic
-- [ ] Subscribe email to topic
-- [ ] Add SNS permissions to Lambda
-- [ ] Publish to SNS on form submission
-
-#### Option C: Third-party (SendGrid, Mailgun, etc.)
-- [ ] Set up third-party account
-- [ ] Store API key in AWS Secrets Manager or environment variable
-- [ ] Add HTTP call to third-party API in Lambda
-
-**Recommended:** Option A (SES) for simplicity and AWS-native integration.
+**See also:** `serverless_app/upgrade_1_email_notifications.md` for full implementation details.
 
 ---
 

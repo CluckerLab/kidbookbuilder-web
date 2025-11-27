@@ -13,6 +13,7 @@ provider:
 
   environment:
     TABLE_NAME: !Ref SignupsTable
+    NOTIFICATION_EMAIL: travis@russigroup.com
 
   httpApi:
     cors:
@@ -54,6 +55,10 @@ provider:
             - logs:CreateLogStream
             - logs:PutLogEvents
           Resource: arn:aws:logs:*:*:*
+        - Effect: Allow
+          Action:
+            - ses:SendEmail
+          Resource: "*"
 
 functions:
   # Public endpoint - no auth required

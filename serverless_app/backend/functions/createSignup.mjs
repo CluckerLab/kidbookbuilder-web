@@ -1,5 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { randomUUID } from "crypto";
 import { createResponse } from "../utils/response.mjs";
 
@@ -7,8 +8,12 @@ import { createResponse } from "../utils/response.mjs";
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
-// Get table name from environment variable
+// Initialize SES client
+const sesClient = new SESClient({});
+
+// Get environment variables
 const tableName = process.env.TABLE_NAME;
+const notificationEmail = process.env.NOTIFICATION_EMAIL;
 
 // Email validation regex
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -84,6 +89,40 @@ export const handler = async (event) => {
     await docClient.send(command);
 
     console.log('Signup created successfully:', item);
+
+    // Send email notification
+    if (notificationEmail) {
+      try {
+        const emailBody = `New KidBookBuilder Signup!
+
+Parent Name: ${item.parentName}
+Parent Email: ${item.parentEmail}
+Child Name: ${item.childName}
+Child Age: ${item.childAge}
+
+Signup ID: ${item.id}
+Timestamp: ${item.createdAt}`;
+
+        const emailCommand = new SendEmailCommand({
+          Source: notificationEmail,
+          Destination: {
+            ToAddresses: [notificationEmail],
+          },
+          Message: {
+            Subject: { Data: `New KidBookBuilder Signup: ${item.parentName}` },
+            Body: {
+              Text: { Data: emailBody },
+            },
+          },
+        });
+
+        await sesClient.send(emailCommand);
+        console.log('Notification email sent successfully');
+      } catch (emailError) {
+        // Log error but don't fail the request - signup was already saved
+        console.error('Failed to send notification email:', emailError);
+      }
+    }
 
     // Return success response
     return createResponse(201, {
