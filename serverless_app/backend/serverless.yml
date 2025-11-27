@@ -1,0 +1,240 @@
+# Serverless Framework Configuration for KidBookBuilder API
+# Includes Cognito Authentication for protected endpoints
+
+service: kidbookbuilder-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  architecture: arm64
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+
+  environment:
+    TABLE_NAME: !Ref SignupsTable
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - http://localhost:3000
+        - http://localhost:5173
+        - https://d1igb37gzeru9j.cloudfront.net
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+    authorizers:
+      cognitoAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}
+        audience:
+          - !Ref CognitoUserPoolClient
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: !GetAtt SignupsTable.Arn
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: arn:aws:logs:*:*:*
+
+functions:
+  # Public endpoint - no auth required
+  createSignup:
+    handler: functions/createSignup.handler
+    description: Create a new signup (public)
+    memorySize: 256
+    timeout: 10
+    events:
+      - httpApi:
+          path: /signups
+          method: POST
+
+  # Protected endpoints - require Cognito JWT
+  getSignups:
+    handler: functions/getSignups.handler
+    description: Get all signups (admin only)
+    memorySize: 256
+    timeout: 10
+    events:
+      - httpApi:
+          path: /signups
+          method: GET
+          authorizer:
+            name: cognitoAuthorizer
+
+  getSignup:
+    handler: functions/getSignup.handler
+    description: Get a single signup by ID (admin only)
+    memorySize: 256
+    timeout: 10
+    events:
+      - httpApi:
+          path: /signups/{id}
+          method: GET
+          authorizer:
+            name: cognitoAuthorizer
+
+  updateSignup:
+    handler: functions/updateSignup.handler
+    description: Update a signup (admin only)
+    memorySize: 256
+    timeout: 10
+    events:
+      - httpApi:
+          path: /signups/{id}
+          method: PUT
+          authorizer:
+            name: cognitoAuthorizer
+
+  deleteSignup:
+    handler: functions/deleteSignup.handler
+    description: Delete a signup (admin only)
+    memorySize: 256
+    timeout: 10
+    events:
+      - httpApi:
+          path: /signups/{id}
+          method: DELETE
+          authorizer:
+            name: cognitoAuthorizer
+
+resources:
+  Resources:
+    SignupsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-signups
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        Tags:
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Service
+            Value: ${self:service}
+
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-${self:provider.stage}-userpool
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: false
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+        UserAttributeUpdateSettings:
+          AttributesRequireVerificationBeforeUpdate:
+            - email
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-${self:provider.stage}-client
+        UserPoolId: !Ref CognitoUserPool
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        GenerateSecret: false
+        PreventUserExistenceErrors: ENABLED
+        RefreshTokenValidity: 30
+        AccessTokenValidity: 60
+        IdTokenValidity: 60
+        TokenValidityUnits:
+          RefreshToken: days
+          AccessToken: minutes
+          IdToken: minutes
+        ReadAttributes:
+          - email
+          - email_verified
+        WriteAttributes:
+          - email
+        CallbackURLs:
+          - http://localhost:3000
+          - http://localhost:5173
+        LogoutURLs:
+          - http://localhost:3000
+          - http://localhost:5173
+        AllowedOAuthFlows:
+          - code
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+          - profile
+        AllowedOAuthFlowsUserPoolClient: true
+        SupportedIdentityProviders:
+          - COGNITO
+
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        Domain: kidbookbuilder-api-dev-1764252546866
+        UserPoolId: !Ref CognitoUserPool
+
+  Outputs:
+    ApiEndpoint:
+      Description: HTTP API Gateway endpoint URL
+      Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ApiEndpoint
+
+    TableName:
+      Description: DynamoDB table name
+      Value: !Ref SignupsTable
+      Export:
+        Name: ${self:service}-${self:provider.stage}-TableName
+
+    UserPoolId:
+      Description: Cognito User Pool ID
+      Value: !Ref CognitoUserPool
+      Export:
+        Name: ${self:service}-${self:provider.stage}-UserPoolId
+
+    UserPoolClientId:
+      Description: Cognito User Pool Client ID
+      Value: !Ref CognitoUserPoolClient
+      Export:
+        Name: ${self:service}-${self:provider.stage}-UserPoolClientId
+
+    CognitoDomain:
+      Description: Cognito Hosted UI Domain
+      Value: !Sub https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoDomain

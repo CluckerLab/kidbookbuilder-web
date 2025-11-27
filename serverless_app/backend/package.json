@@ -1,0 +1,22 @@
+{
+  "name": "kidbookbuilder-api",
+  "version": "1.0.0",
+  "description": "Serverless API for KidBookBuilder signups",
+  "type": "module",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f",
+    "info": "serverless info",
+    "info:prod": "serverless info --stage prod"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.0.0"
+  }
+}

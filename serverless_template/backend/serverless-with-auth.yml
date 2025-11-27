@@ -1,0 +1,182 @@
+# Serverless Framework Configuration with Cognito Authentication
+# Replace {{SERVICE_NAME}}, {{REGION}}, etc. with actual values
+
+service: {{SERVICE_NAME}}
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  architecture: arm64
+  region: {{REGION}}
+  stage: ${opt:stage, 'dev'}
+
+  environment:
+    TABLE_NAME: !Ref MainTable
+
+  httpApi:
+    cors: true
+    authorizers:
+      cognitoAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}
+        audience:
+          - !Ref CognitoUserPoolClient
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: !GetAtt MainTable.Arn
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: arn:aws:logs:*:*:*
+
+functions:
+  # Example authenticated endpoint
+  getItems:
+    handler: src/functions/get.handler
+    description: Get all items
+    memorySize: 256
+    timeout: 10
+    events:
+      - httpApi:
+          path: /items
+          method: GET
+          authorizer:
+            name: cognitoAuthorizer
+
+resources:
+  Resources:
+    MainTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-table
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        Tags:
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Service
+            Value: ${self:service}
+
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-${self:provider.stage}-userpool
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: false
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+        UserAttributeUpdateSettings:
+          AttributesRequireVerificationBeforeUpdate:
+            - email
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-${self:provider.stage}-client
+        UserPoolId: !Ref CognitoUserPool
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        GenerateSecret: false
+        PreventUserExistenceErrors: ENABLED
+        RefreshTokenValidity: 30
+        AccessTokenValidity: 60
+        IdTokenValidity: 60
+        TokenValidityUnits:
+          RefreshToken: days
+          AccessToken: minutes
+          IdToken: minutes
+        ReadAttributes:
+          - email
+          - email_verified
+        WriteAttributes:
+          - email
+        CallbackURLs:
+          - http://localhost:5173
+          - {{FRONTEND_URL}}
+        LogoutURLs:
+          - http://localhost:5173
+          - {{FRONTEND_URL}}
+        AllowedOAuthFlows:
+          - code
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+          - profile
+        AllowedOAuthFlowsUserPoolClient: true
+        SupportedIdentityProviders:
+          - COGNITO
+
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        # Use a stable domain name - avoid ${sls:instanceId} as it changes on each deploy
+        # and Cognito domains cannot be updated once created
+        Domain: ${self:service}-${self:provider.stage}-auth
+        UserPoolId: !Ref CognitoUserPool
+
+  Outputs:
+    ApiEndpoint:
+      Description: HTTP API Gateway endpoint URL
+      Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ApiEndpoint
+
+    TableName:
+      Description: DynamoDB table name
+      Value: !Ref MainTable
+      Export:
+        Name: ${self:service}-${self:provider.stage}-TableName
+
+    UserPoolId:
+      Description: Cognito User Pool ID
+      Value: !Ref CognitoUserPool
+      Export:
+        Name: ${self:service}-${self:provider.stage}-UserPoolId
+
+    UserPoolClientId:
+      Description: Cognito User Pool Client ID
+      Value: !Ref CognitoUserPoolClient
+      Export:
+        Name: ${self:service}-${self:provider.stage}-UserPoolClientId
+
+    CognitoDomain:
+      Description: Cognito Hosted UI Domain
+      Value: !Sub https://${CognitoUserPoolDomain}.auth.${AWS::Region}.amazoncognito.com
+      Export:
+        Name: ${self:service}-${self:provider.stage}-CognitoDomain

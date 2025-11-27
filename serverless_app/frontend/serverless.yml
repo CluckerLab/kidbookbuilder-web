@@ -1,0 +1,122 @@
+# Serverless Framework Configuration for Frontend
+# Deploys static Next.js site to S3 + CloudFront
+
+service: kidbookbuilder-frontend
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+
+plugins:
+  - serverless-s3-sync
+
+custom:
+  siteName: kidbookbuilder-${self:provider.stage}
+  s3Bucket: ${self:custom.siteName}-website
+  s3Sync:
+    - bucketName: ${self:custom.s3Bucket}
+      localDir: out
+      deleteRemoved: true
+      acl: private
+      defaultContentType: text/html
+
+resources:
+  Resources:
+    # S3 Bucket for static website files
+    WebsiteBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.s3Bucket}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+    # Bucket policy to allow CloudFront access
+    WebsiteBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref WebsiteBucket
+        PolicyDocument:
+          Statement:
+            - Sid: AllowCloudFrontAccess
+              Effect: Allow
+              Principal:
+                Service: cloudfront.amazonaws.com
+              Action: s3:GetObject
+              Resource: !Sub ${WebsiteBucket.Arn}/*
+              Condition:
+                StringEquals:
+                  AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+
+    # CloudFront Origin Access Control
+    CloudFrontOAC:
+      Type: AWS::CloudFront::OriginAccessControl
+      Properties:
+        OriginAccessControlConfig:
+          Name: ${self:custom.siteName}-oac
+          OriginAccessControlOriginType: s3
+          SigningBehavior: always
+          SigningProtocol: sigv4
+
+    # CloudFront Distribution
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          Comment: ${self:custom.siteName} website distribution
+          DefaultRootObject: index.html
+          HttpVersion: http2
+          PriceClass: PriceClass_100
+          Origins:
+            - Id: S3Origin
+              DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+              S3OriginConfig:
+                OriginAccessIdentity: ''
+              OriginAccessControlId: !GetAtt CloudFrontOAC.Id
+          DefaultCacheBehavior:
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+            OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf  # CORS-S3Origin
+          CustomErrorResponses:
+            # Handle SPA routing - return index.html for 404s
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 300
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 300
+
+  Outputs:
+    WebsiteBucketName:
+      Description: S3 bucket name
+      Value: !Ref WebsiteBucket
+      Export:
+        Name: ${self:service}-${self:provider.stage}-BucketName
+
+    CloudFrontDistributionId:
+      Description: CloudFront distribution ID
+      Value: !Ref CloudFrontDistribution
+      Export:
+        Name: ${self:service}-${self:provider.stage}-DistributionId
+
+    CloudFrontDomainName:
+      Description: CloudFront domain name (website URL)
+      Value: !Sub https://${CloudFrontDistribution.DomainName}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-WebsiteUrl
